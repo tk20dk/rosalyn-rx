@@ -1,2 +1,2 @@
 # rosalyn-rx
-LoRa RX receiver
+Rosalyn LoRa receiver
