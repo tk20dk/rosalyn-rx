@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "RosalynRX"
-Date "2020-11-17"
+Date "2020-11-23"
 Rev "v1.0"
 Comp "www.2-0.dk"
 Comment1 ""

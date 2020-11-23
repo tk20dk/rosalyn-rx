@@ -1,14 +1,14 @@
 (export (version D)
   (design
-    (source /home/tk/projects/rosalyn-rx/kicad/rosalyn-rx.sch)
-    (date "2020-11-17T09:20:42 CET")
+    (source /home/tk/tk20dk/rosalyn-rx/kicad/rosalyn-rx.sch)
+    (date "2020-11-23T17:02:18 CET")
     (tool "Eeschema 5.1.8-db9833491~87~ubuntu20.04.1")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
         (title RosalynRX)
         (company www.2-0.dk)
         (rev v1.0)
-        (date 2020-11-16)
+        (date 2020-11-23)
         (source rosalyn-rx.sch)
         (comment (number 1) (value ""))
         (comment (number 2) (value ""))
@@ -592,7 +592,7 @@
     (library (logical Sensor_Pressure)
       (uri /usr/share/kicad/library/Sensor_Pressure.lib))
     (library (logical rosalyn-rx)
-      (uri /home/tk/projects/rosalyn-rx/kicad/rosalyn-rx.lib)))
+      (uri /home/tk/tk20dk/rosalyn-rx/kicad/rosalyn-rx.lib)))
   (nets
     (net (code 1) (name +3V3)
       (node (ref C1) (pin 1))
