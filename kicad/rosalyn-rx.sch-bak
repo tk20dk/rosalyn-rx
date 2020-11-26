@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "RosalynRX"
-Date "2020-11-23"
+Date "2020-11-17"
 Rev "v1.0"
 Comp "www.2-0.dk"
 Comment1 ""
@@ -747,7 +747,7 @@ tim2_ch2
 Text Notes 1900 4450 0    50   ~ 0
 tim3_ch1
 Text Notes 1900 4550 0    50   ~ 0
-tim3_ch2
+tim3_ch3
 Text Notes 1900 4650 0    50   ~ 0
 tim4_ch1
 Text Notes 1900 4750 0    50   ~ 0
