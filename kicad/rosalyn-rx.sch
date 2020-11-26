@@ -5,7 +5,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "RosalynRX"
-Date "2020-11-17"
+Date "2020-11-23"
 Rev "v1.0"
 Comp "www.2-0.dk"
 Comment1 ""
@@ -48,7 +48,7 @@ F 3 "~" H 9400 5800 50  0001 C CNN
 $EndComp
 NoConn ~ 6000 3100
 Text GLabel 6000 2650 0    50   Input ~ 0
-e22_nss
+radio_nss
 Text GLabel 6000 2750 0    50   Input ~ 0
 spi2_sck
 Text GLabel 6000 2850 0    50   Output ~ 0
@@ -56,17 +56,17 @@ spi2_miso
 Text GLabel 6000 2950 0    50   Input ~ 0
 spi2_mosi
 Text GLabel 7400 2650 2    50   Input ~ 0
-e22_rxen
+radio_rxen
 Text GLabel 7400 2750 2    50   Input ~ 0
-e22_txen
+radio_txen
 Text GLabel 7400 2850 2    50   BiDi ~ 0
-e22_dio1
+radio_dio1
 Text GLabel 7400 2950 2    50   BiDi ~ 0
-e22_dio2
+radio_dio2
 Text GLabel 7400 3050 2    50   Output ~ 0
-e22_busy
+radio_busy
 Text GLabel 7400 3150 2    50   Input ~ 0
-e22_nrst
+radio_nrst
 Text GLabel 3950 4500 2    50   Output ~ 0
 spi1_sck
 Text GLabel 3950 4700 2    50   Output ~ 0
@@ -769,19 +769,19 @@ spi2_miso
 Text GLabel 2650 5500 0    50   Output ~ 0
 spi2_mosi
 Text GLabel 2650 5200 0    50   Input ~ 0
-e22_nss
+radio_nss
 Text GLabel 3950 4800 2    50   Input ~ 0
-e22_nrst
+radio_nrst
 Text GLabel 3950 4900 2    50   Output ~ 0
-e22_busy
+radio_busy
 Text GLabel 3950 5000 2    50   BiDi ~ 0
-e22_dio1
+radio_dio1
 Text GLabel 2650 3600 0    50   BiDi ~ 0
-e22_dio2
+radio_dio2
 Text GLabel 2650 3700 0    50   Input ~ 0
-e22_txen
+radio_txen
 Text GLabel 2650 3800 0    50   Input ~ 0
-e22_rxen
+radio_rxen
 Text GLabel 9250 4550 0    50   Input ~ 0
 icm_nss
 Text GLabel 10250 4250 2    50   Output ~ 0
