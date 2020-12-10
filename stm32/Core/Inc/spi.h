@@ -1,32 +1,54 @@
 #ifndef SPI_H__
 #define SPI_H__
 
-#ifdef STM32F303xC
-  #include "stm32f3xx_hal.h"
-#elif defined ( STM32F070x6 ) || defined( STM32F072xB )
-  #include "stm32f0xx_hal.h"
-#endif
+#include <main.h>
 
+#define SPI SPI2
 
-class TSpi
+struct TDriverSpi
 {
-  static uint32_t const SpiTimeout = 10; // 10ms
 
-public:
-  TSpi( SPI_HandleTypeDef &hspi );
+  static void Setup();
+  static void Write( uint8_t const Data );
+  static void Write( void const* const TxData, uint32_t const Length );
+  static void Read( void* const RxData, uint32_t const Length );
 
-  void Write( uint8_t const Data );
-  void Write( void const *const Data, uint16_t const Length );
+  static void WriteRead( void const* const TxData, void* const RxData, uint32_t const Length );
+  static uint8_t WriteRead( uint8_t const Data = 0x00 );
 
-  uint8_t Read();
-  void Read( void *const Data, uint16_t const Length );
+  static void WaitTXE()
+  {
+    while( !LL_SPI_IsActiveFlag_TXE( SPI ))
+    {
+    }
+  }
 
-  uint8_t WriteRead( uint8_t const Data );
-  void WriteRead( void const *const TxData, void *const RxData, uint16_t const Length );
+  static void WaitRXNE()
+  {
+    while( !LL_SPI_IsActiveFlag_RXNE( SPI ))
+    {
+    }
+  }
 
-private:
-  SPI_HandleTypeDef &hspi;
+  static void WaitNBSY()
+  {
+    while( LL_SPI_IsActiveFlag_BSY( SPI ))
+    {
+    }
+  }
+
+  static void ClearOVR()
+  {
+    LL_SPI_ClearFlag_OVR( SPI );
+  }
+
+  static void TransmitBSY( uint8_t const Data )
+  {
+    LL_SPI_TransmitData8( SPI, Data );
+    WaitTXE();
+  }
 };
-extern TSpi Spi;
+
+extern TDriverSpi Spi;
 
 #endif // SPI_H__

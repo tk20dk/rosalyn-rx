@@ -1,69 +1,77 @@
-#include "spi.h"
+#include <spi.h>
 
 
-TSpi::TSpi( SPI_HandleTypeDef &hspi ) :
-  hspi( hspi )
+void TDriverSpi::Setup()
 {
+  LL_SPI_SetRxFIFOThreshold( SPI, LL_SPI_RX_FIFO_TH_QUARTER );
+  LL_SPI_Enable( SPI );
 }
 
-void TSpi::Write( uint8_t const Data )
+uint8_t TDriverSpi::WriteRead( uint8_t const Data )
 {
-  uint8_t TxData = Data;
-  auto const Result = HAL_SPI_Transmit( &hspi, &TxData, 1, SpiTimeout );
-  assert_param( Result == HAL_OK );
+  ClearOVR();
+  LL_SPI_TransmitData8( SPI, Data );
+//  WaitTXE();
+  WaitRXNE();
+  return LL_SPI_ReceiveData8( SPI );
 }
 
-void TSpi::Write( void const *const TxData, uint16_t const Length )
+void TDriverSpi::Write( uint8_t const Data )
 {
-  auto const TxData0 = const_cast< uint8_t* >( reinterpret_cast< uint8_t const* >( TxData ));
+  (void)WriteRead( Data );
+//  TransmitBSY( Data );
+//  WaitNBSY();
+}
 
-  auto const Result = HAL_SPI_Transmit( &hspi, TxData0, Length, SpiTimeout );
-  assert_param( Result == HAL_OK );
+void TDriverSpi::Write( void const* const TxData, uint32_t const Length )
+{
+  auto TxPtr = reinterpret_cast< uint8_t const*>( TxData );
+  auto const TxEnd = &TxPtr[ Length ];
 
-  while( HAL_SPI_GetState( &hspi ) == HAL_SPI_STATE_BUSY_TX )
+  do
   {
+    (void)WriteRead( *TxPtr++ );
+//    LL_SPI_TransmitData8( SPI, *TxPtr++ );
+//    WaitTXE();
   }
+  while( TxPtr < TxEnd );
+
+//  WaitNBSY();
 }
 
-uint8_t TSpi::Read()
+void TDriverSpi::Read( void* const RxData, uint32_t const Length )
 {
-  uint8_t RxData;
-  auto const Result = HAL_SPI_Receive( &hspi, &RxData, 1, SpiTimeout );
-  assert_param( Result == HAL_OK );
-  return RxData;
-}
+  auto RxPtr = reinterpret_cast< uint8_t*>( RxData );
+  auto const RxEnd = &RxPtr[ Length ];
 
-void TSpi::Read( void *const RxData, uint16_t const Length )
-{
-  auto const RxData0 = reinterpret_cast< uint8_t* >( RxData );
+  ClearOVR();
 
-  auto const Result = HAL_SPI_Receive( &hspi, RxData0, Length, SpiTimeout );
-  assert_param( Result == HAL_OK );
-
-  while( HAL_SPI_GetState( &hspi ) == HAL_SPI_STATE_BUSY_RX )
+  do
   {
+    *RxPtr++ = WriteRead();
+//    LL_SPI_TransmitData8( SPI, 0x00 );
+//    WaitTXE();
+//    WaitRXNE();
+//    *RxPtr++ = LL_SPI_ReceiveData8( SPI );
   }
+  while( RxPtr < RxEnd );
 }
 
-uint8_t TSpi::WriteRead( uint8_t const Data )
+void TDriverSpi::WriteRead( void const* const TxData, void* const RxData, uint32_t const Length )
 {
-  uint8_t RxData;
-  uint8_t TxData = Data;
-  auto const Result = HAL_SPI_TransmitReceive( &hspi, &TxData, &RxData, 1U, SpiTimeout );
-  assert_param( Result == HAL_OK );
-  return RxData;
-}
+  auto RxPtr = reinterpret_cast< uint8_t*>( RxData );
+  auto TxPtr = reinterpret_cast< uint8_t const*>( TxData );
+  auto const TxEnd = &TxPtr[ Length ];
 
-void TSpi::WriteRead( void const *const TxData, void *const RxData, uint16_t const Length )
-{
-  auto const RxData0 = reinterpret_cast< uint8_t* >( RxData );
-  auto const TxData0 = const_cast< uint8_t* >( reinterpret_cast< uint8_t const* >( TxData ));
+  ClearOVR();
 
-  auto const Result = HAL_SPI_TransmitReceive( &hspi, TxData0, RxData0, Length, SpiTimeout );
-  assert_param( Result == HAL_OK );
-
-  while( HAL_SPI_GetState( &hspi ) == HAL_SPI_STATE_BUSY_TX_RX )
+  do
   {
+    *RxPtr++ = WriteRead( *TxPtr++ );
+//    LL_SPI_TransmitData8( SPI, *TxPtr++ );
+//    WaitTXE();
+//    WaitRXNE();
+//    *RxPtr++ = LL_SPI_ReceiveData8( SPI );
   }
+  while( TxPtr < TxEnd );
 }
-

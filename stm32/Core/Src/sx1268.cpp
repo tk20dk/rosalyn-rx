@@ -1,5 +1,5 @@
+#include "main.h"
 #include "sx1268.h"
-
 
 TSx1268::TSx1268(
   uint32_t const BaseFreq,
@@ -40,7 +40,7 @@ bool TSx1268::Setup( Modulation_t const &Modulation, int32_t const TxPower, uint
   SetRegulatorMode( USE_DCDC );
   SetDio3AsTcxoCtrl( TCXO_CTRL_1_8V, 500 );
 
-  RadioStatus_t Status =  GetStatus();
+  RadioStatus_t Status = GetStatus();
   RadioError_t Errors = GetDeviceErrors();
   if(( Errors.Value != 0x2000 ) || ( Status.Fields.CpuBusy != 0 ) ||
      ( Status.Fields.ChipMode != 2 ) || ( Status.Fields.CmdStatus != 1 ))
@@ -52,7 +52,7 @@ bool TSx1268::Setup( Modulation_t const &Modulation, int32_t const TxPower, uint
   calibParam.Value = 0x7F;
   Calibrate( calibParam );
 
-  Status =  GetStatus();
+  Status = GetStatus();
   Errors = GetDeviceErrors();
   if(( Errors.Value != 0x2000 ) || ( Status.Fields.CpuBusy != 0 ) ||
      ( Status.Fields.ChipMode != 2 ) || ( Status.Fields.CmdStatus != 1 ))
@@ -595,9 +595,9 @@ void TSx1268::WaitOnBusy()
 void TSx1268::Reset( void )
 {
   ResetPin( PortNRST, PinNRST );
-  HAL_Delay( 2 );
+  LL_mDelay( 2 );
   SetPin( PortNRST, PinNRST );
-  HAL_Delay( 2 );
+  LL_mDelay( 2 );
 }
 
 uint16_t TSx1268::ReadPacket( void *const Buffer, uint32_t const MaxLength )

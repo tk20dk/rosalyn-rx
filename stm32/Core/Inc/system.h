@@ -23,12 +23,12 @@ inline bool ReadPin( GPIO_TypeDef *const Port, uint32_t const Pin )
 
 inline void HmiStatus( bool const Mode )
 {
-  HMI_STATUS_GPIO_Port->BSRR = Mode ? HMI_STATUS_Pin : HMI_STATUS_Pin << 16;
+  HMI_STATUS_GPIO_Port->BSRR = Mode ? HMI_STATUS_Pin << 16 : HMI_STATUS_Pin;
 }
 
 inline void HmiError( bool const Mode )
 {
-  HMI_ERROR_GPIO_Port->BSRR = Mode ? HMI_ERROR_Pin : HMI_ERROR_Pin << 16;
+  HMI_ERROR_GPIO_Port->BSRR = Mode ? HMI_ERROR_Pin << 16 : HMI_ERROR_Pin;
 }
 
 #endif // SYSTEM_H__

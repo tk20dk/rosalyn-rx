@@ -6,8 +6,6 @@
 #include "sx1268.h"
 
 
-extern "C" SPI_HandleTypeDef hspi1;
-
 class TRosalynRx
 {
   static uint32_t const MinPPM = 900;
@@ -20,10 +18,15 @@ public:
   void Loop();
   void Setup();
   void RadioEvent( TRadioEvent const Event );
-  void HAL_GPIO_EXTI_Callback( uint16_t const GPIO_Pin );
+
+  void SysTick_Handler();
+  void EXTI2_3_IRQHandler();
+  void EXTI4_15_IRQHandler();
+  void USART2_IRQHandler();
+  void USART3_4_IRQHandler();
 
 private:
-  bool Failsafe;
+  bool IcmFlag;;
   bool RadioFlag;
   TSx1268 Radio;
   TNvData NvData;
