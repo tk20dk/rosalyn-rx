@@ -4,8 +4,24 @@
 TDriverSpi Spi;
 TRosalynRx RosalynRx;
 
+uint32_t volatile TickSys;
+extern "C" uint32_t HAL_GetTick()
+{
+  return TickSys;
+}
+
 void TRosalynRx::Loop()
 {
+  HmiLoop();
+
+  static uint32_t LastTick;
+  auto const Tick = HAL_GetTick();
+  if(( Tick > LastTick ) && ( Tick % 14 ) == 0 )
+  {
+    LastTick = Tick;
+    SbusSerial.Transmit( SbusDataDownstream );
+  }
+
   if( IcmFlag )
   {
     IcmFlag = false;
@@ -15,6 +31,13 @@ void TRosalynRx::Loop()
   {
     RadioFlag = false;
     Radio.Interrupt();
+  }
+
+  if( SerialFlag )
+  {
+    SerialFlag = false;
+    SbusDataUpstream = SbusSerial.Receive();
+    HmiError( 5 );
   }
 }
 
@@ -26,25 +49,39 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
   {
     auto const Snr = Radio.GetSnr();
     auto const Rssi = Radio.GetRssi();
-    auto const Length = Radio.ReadPacket( Buffer, sizeof( Buffer ));
+    auto const LenRx = Radio.ReadPacket( Buffer, sizeof( Buffer ));
 
-    UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u Length error\n", Rssi, Snr / 10, abs(Snr) % 10, Length );
+    HmiStatus( 10 );
+    UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u Length error\n", Rssi, Snr / 10, abs(Snr) % 10, LenRx );
 
-    Radio.Transmit( Buffer, Length );
-//    Radio.Receive();
+    if( LenRx == 25 )
+    {
+      int32_t LenOut;
+      TSbusFrame SbusFrameRx;
+
+      AesCrypto.DecryptCFB( Buffer, LenRx, SbusFrameRx.Buffer, LenOut );
+      TSbusData SbusData( SbusFrameRx );
+
+      auto const SbusFrameTx = SbusData.Encode();
+      AesCrypto.EncryptCFB( SbusFrameTx.Buffer, LenRx, Buffer, LenOut );
+
+      Radio.Transmit( Buffer, LenRx );
+    }
+    else
+    {
+      Radio.Receive();
+    }
   }
 
   if( Event == TRadioEvent::TxDone )
   {
-    HmiStatus( true );
-    LL_mDelay( 5 );
-    HmiStatus( false );
-
+    HmiStatus( 10 );
     Radio.Receive();
   }
 
   if( Event == TRadioEvent::Timeout )
   {
+    HmiError( 1000 );
   }
 
   if( Event == TRadioEvent::CrcError )
@@ -53,7 +90,7 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
     auto const Rssi = Radio.GetRssi();
     auto const Length = Radio.ReadPacket( Buffer, sizeof( Buffer ));
 
-    HmiError( true );
+    HmiError( 1000 );
     UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u CRC Error\n", Rssi, Snr / 10, abs(Snr) % 10, Length );
   }
 
@@ -63,7 +100,7 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
     auto const Rssi = Radio.GetRssi();
     auto const Length = Radio.ReadPacket( Buffer, sizeof( Buffer ));
 
-    HmiError( true );
+    HmiError( 1000 );
     UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u No CRC\n", Rssi, Snr / 10, abs(Snr) % 10, Length );
   }
 }
@@ -72,20 +109,56 @@ void TRosalynRx::Setup()
 {
 //  NvData.Load();
   UartPrintf( "RosalynTX\n" );
-  HmiStatus( true );
+  HmiStatus();
+
+  // Enable SysTick IRQ
+  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
 
   Spi.Setup();
+  SbusSerial.Setup();
 
   if( Radio.Setup( NvData.Modulation[ 2 ], NvData.TxPower, NvData.Channel ))
   {
-//    uint8_t Buffer[128];
-//    Radio.Transmit( Buffer, sizeof( Buffer ));
     Radio.Receive();
   }
 }
 
+void TRosalynRx::HmiLoop()
+{
+  if( TimeoutHmiError && ( HAL_GetTick() >= TimeoutHmiError ))
+  {
+    TimeoutHmiError = 0;
+    SetPin( HMI_ERROR_GPIO_Port, HMI_ERROR_Pin );
+  }
+
+  if( TimeoutHmiStatus && ( HAL_GetTick() >= TimeoutHmiStatus ))
+  {
+    TimeoutHmiStatus = 0;
+    SetPin( HMI_STATUS_GPIO_Port, HMI_STATUS_Pin );
+  }
+}
+
+void TRosalynRx::HmiError( uint32_t const Interval )
+{
+  if( Interval )
+  {
+	TimeoutHmiError = HAL_GetTick() + Interval;
+  }
+  ResetPin( HMI_ERROR_GPIO_Port, HMI_ERROR_Pin );
+}
+
+void TRosalynRx::HmiStatus( uint32_t const Interval )
+{
+  if( Interval )
+  {
+    TimeoutHmiStatus = HAL_GetTick() + Interval;
+  }
+  ResetPin( HMI_STATUS_GPIO_Port, HMI_STATUS_Pin );
+}
+
 void TRosalynRx::SysTick_Handler()
 {
+  TickSys++;
 }
 
 void TRosalynRx::EXTI2_3_IRQHandler()
@@ -99,6 +172,7 @@ void TRosalynRx::EXTI2_3_IRQHandler()
 
 void TRosalynRx::EXTI4_15_IRQHandler()
 {
+  // Radio DIO1 interrupt
   if( LL_EXTI_IsActiveFlag_0_31( LL_EXTI_LINE_10 ) != RESET )
   {
     LL_EXTI_ClearFlag_0_31( LL_EXTI_LINE_10 );
@@ -115,8 +189,11 @@ void TRosalynRx::USART3_4_IRQHandler()
 }
 
 TRosalynRx::TRosalynRx() :
+  NvData(),
   IcmFlag( false ),
+  TimerFlag( false ),
   RadioFlag( false ),
+  SerialFlag( false ),
   Radio(
     433050000,
 	RADIO_NSS_GPIO_Port,
@@ -130,7 +207,12 @@ TRosalynRx::TRosalynRx() :
 	RADIO_TXEN_GPIO_Port,
 	RADIO_TXEN_Pin,
     std::bind( &TRosalynRx::RadioEvent, this, std::placeholders::_1 )),
-  NvData()
+  TimeoutHmiError( 0 ),
+  TimeoutHmiStatus( 0 ),
+  SbusDataUpstream(),
+  SbusDataDownstream(),
+  AesCrypto( NvData.AesIV, NvData.AesKey ),
+  SbusSerial( USART1, SerialFlag )
 {
 }
 

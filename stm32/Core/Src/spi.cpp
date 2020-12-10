@@ -3,17 +3,17 @@
 
 void TDriverSpi::Setup()
 {
-  LL_SPI_SetRxFIFOThreshold( SPI, LL_SPI_RX_FIFO_TH_QUARTER );
-  LL_SPI_Enable( SPI );
+  LL_SPI_SetRxFIFOThreshold( SPI1, LL_SPI_RX_FIFO_TH_QUARTER );
+  LL_SPI_Enable( SPI1 );
 }
 
 uint8_t TDriverSpi::WriteRead( uint8_t const Data )
 {
   ClearOVR();
-  LL_SPI_TransmitData8( SPI, Data );
+  LL_SPI_TransmitData8( SPI1, Data );
 //  WaitTXE();
   WaitRXNE();
-  return LL_SPI_ReceiveData8( SPI );
+  return LL_SPI_ReceiveData8( SPI1 );
 }
 
 void TDriverSpi::Write( uint8_t const Data )
@@ -31,7 +31,7 @@ void TDriverSpi::Write( void const* const TxData, uint32_t const Length )
   do
   {
     (void)WriteRead( *TxPtr++ );
-//    LL_SPI_TransmitData8( SPI, *TxPtr++ );
+//    LL_SPI_TransmitData8( SPI1, *TxPtr++ );
 //    WaitTXE();
   }
   while( TxPtr < TxEnd );
@@ -49,10 +49,10 @@ void TDriverSpi::Read( void* const RxData, uint32_t const Length )
   do
   {
     *RxPtr++ = WriteRead();
-//    LL_SPI_TransmitData8( SPI, 0x00 );
+//    LL_SPI_TransmitData8( SPI1, 0x00 );
 //    WaitTXE();
 //    WaitRXNE();
-//    *RxPtr++ = LL_SPI_ReceiveData8( SPI );
+//    *RxPtr++ = LL_SPI_ReceiveData8( SPI1 );
   }
   while( RxPtr < RxEnd );
 }
@@ -68,10 +68,10 @@ void TDriverSpi::WriteRead( void const* const TxData, void* const RxData, uint32
   do
   {
     *RxPtr++ = WriteRead( *TxPtr++ );
-//    LL_SPI_TransmitData8( SPI, *TxPtr++ );
+//    LL_SPI_TransmitData8( SPI1, *TxPtr++ );
 //    WaitTXE();
 //    WaitRXNE();
-//    *RxPtr++ = LL_SPI_ReceiveData8( SPI );
+//    *RxPtr++ = LL_SPI_ReceiveData8( SPI1 );
   }
   while( TxPtr < TxEnd );
 }

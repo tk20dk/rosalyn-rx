@@ -1,9 +1,11 @@
 #ifndef ROSALYN_RX_H__
 #define ROSALYN_RX_H__
 
+#include "sbus.h"
 #include "nvdata.h"
 #include "system.h"
 #include "sx1268.h"
+#include "aes-crypto.h"
 
 
 class TRosalynRx
@@ -17,6 +19,9 @@ public:
 
   void Loop();
   void Setup();
+  void HmiLoop();
+  void HmiError( uint32_t const Interval = 0 );
+  void HmiStatus( uint32_t const Interval = 0 );
   void RadioEvent( TRadioEvent const Event );
 
   void SysTick_Handler();
@@ -26,10 +31,18 @@ public:
   void USART3_4_IRQHandler();
 
 private:
-  bool IcmFlag;;
-  bool RadioFlag;
-  TSx1268 Radio;
   TNvData NvData;
+  bool IcmFlag;;
+  bool TimerFlag;
+  bool RadioFlag;
+  bool SerialFlag;
+  TSx1268 Radio;
+  uint32_t TimeoutHmiError;
+  uint32_t TimeoutHmiStatus;
+  TSbusData SbusDataUpstream;
+  TSbusData SbusDataDownstream;
+  TAesCrypto AesCrypto;
+  TSbusSerial SbusSerial;
 };
 
 #endif // ROSALYN_RX_H__

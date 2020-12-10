@@ -3,11 +3,9 @@
 
 #include <main.h>
 
-#define SPI SPI2
 
 struct TDriverSpi
 {
-
   static void Setup();
   static void Write( uint8_t const Data );
   static void Write( void const* const TxData, uint32_t const Length );
@@ -18,33 +16,33 @@ struct TDriverSpi
 
   static void WaitTXE()
   {
-    while( !LL_SPI_IsActiveFlag_TXE( SPI ))
+    while( !LL_SPI_IsActiveFlag_TXE( SPI1 ))
     {
     }
   }
 
   static void WaitRXNE()
   {
-    while( !LL_SPI_IsActiveFlag_RXNE( SPI ))
+    while( !LL_SPI_IsActiveFlag_RXNE( SPI1 ))
     {
     }
   }
 
   static void WaitNBSY()
   {
-    while( LL_SPI_IsActiveFlag_BSY( SPI ))
+    while( LL_SPI_IsActiveFlag_BSY( SPI1 ))
     {
     }
   }
 
   static void ClearOVR()
   {
-    LL_SPI_ClearFlag_OVR( SPI );
+    LL_SPI_ClearFlag_OVR( SPI1 );
   }
 
   static void TransmitBSY( uint8_t const Data )
   {
-    LL_SPI_TransmitData8( SPI, Data );
+    LL_SPI_TransmitData8( SPI1, Data );
     WaitTXE();
   }
 };
