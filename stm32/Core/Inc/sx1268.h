@@ -2,6 +2,7 @@
 #define SX1268_H__
 
 #include <functional>
+#include "main.h"
 #include "spi.h"
 #include "system.h"
 #include "sx1268-def.h"
@@ -71,6 +72,7 @@ class TSx1268
 
 public:
   TSx1268(
+    TSpi &Spi,
     uint32_t const BaseFreq,
     GPIO_TypeDef *const PortNSS,
     uint32_t const PinNSS,
@@ -135,6 +137,7 @@ private:
   void ReadBuffer( uint8_t const Offset, void *const Buffer, uint16_t const Length );
 
 private:
+  TSpi &Spi;
   bool ImageCalibrated;
   uint32_t const BaseFreq;
   uint32_t FrequencyError;

@@ -1,7 +1,6 @@
 #include "rosalyn-rx.h"
 
 
-TDriverSpi Spi;
 TRosalynRx RosalynRx;
 
 uint32_t volatile TickSys;
@@ -120,7 +119,7 @@ void TRosalynRx::Setup()
   // Enable SysTick IRQ
   SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
 
-  Spi.Setup();
+  RadioSpi.Setup();
   SbusSerial.Setup();
 
   if( Radio.Setup( NvData.Modulation[ 2 ], NvData.TxPower, NvData.Channel ))
@@ -220,7 +219,9 @@ TRosalynRx::TRosalynRx() :
   TimerFlag( false ),
   RadioFlag( false ),
   SerialFlag( false ),
+  RadioSpi( SPI2 ),
   Radio(
+    RadioSpi,
     433050000,
 	RADIO_NSS_GPIO_Port,
 	RADIO_NSS_Pin,

@@ -38,6 +38,7 @@ private:
   bool TimerFlag;
   bool RadioFlag;
   bool SerialFlag;
+  TSpi RadioSpi;
   TSx1268 Radio;
   uint32_t TimeoutHmiError;
   uint32_t TimeoutHmiStatus;

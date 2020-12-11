@@ -4,49 +4,67 @@
 #include <main.h>
 
 
-struct TDriverSpi
+class TSpi
 {
-  static void Setup();
-  static void Write( uint8_t const Data );
-  static void Write( void const* const TxData, uint32_t const Length );
-  static void Read( void* const RxData, uint32_t const Length );
+public:
+  TSpi( SPI_TypeDef *const SPIx );
 
-  static void WriteRead( void const* const TxData, void* const RxData, uint32_t const Length );
-  static uint8_t WriteRead( uint8_t const Data = 0x00 );
-
-  static void WaitTXE()
+  void Setup()
   {
-    while( !LL_SPI_IsActiveFlag_TXE( SPI1 ))
+    LL_SPI_SetRxFIFOThreshold( SPI, LL_SPI_RX_FIFO_TH_QUARTER );
+    LL_SPI_Enable( SPI );
+  }
+
+  void Read( void* const RxData, uint32_t const Length ) const;
+  void Write( void const* const TxData, uint32_t const Length ) const;
+  void WriteRead( void const* const TxData, void* const RxData, uint32_t const Length ) const;
+
+  uint8_t Read() const
+  {
+    return WriteRead();
+  }
+
+  void Write( uint8_t const Data ) const
+  {
+    (void)WriteRead( Data );
+  }
+
+  uint8_t WriteRead( uint8_t const Data = 0x00 ) const;
+
+  void WaitTXE() const
+  {
+    while( !LL_SPI_IsActiveFlag_TXE( SPI ))
     {
     }
   }
 
-  static void WaitRXNE()
+  void WaitRXNE() const
   {
-    while( !LL_SPI_IsActiveFlag_RXNE( SPI1 ))
+    while( !LL_SPI_IsActiveFlag_RXNE( SPI ))
     {
     }
   }
 
-  static void WaitNBSY()
+  void WaitNBSY() const
   {
-    while( LL_SPI_IsActiveFlag_BSY( SPI1 ))
+    while( LL_SPI_IsActiveFlag_BSY( SPI ))
     {
     }
   }
 
-  static void ClearOVR()
+  void ClearOVR() const
   {
-    LL_SPI_ClearFlag_OVR( SPI1 );
+    LL_SPI_ClearFlag_OVR( SPI );
   }
 
-  static void TransmitBSY( uint8_t const Data )
+  void TransmitBSY( uint8_t const Data ) const
   {
-    LL_SPI_TransmitData8( SPI1, Data );
+    LL_SPI_TransmitData8( SPI, Data );
     WaitTXE();
   }
-};
 
-extern TDriverSpi Spi;
+private:
+  SPI_TypeDef *const SPI;
+};
 
 #endif // SPI_H__
