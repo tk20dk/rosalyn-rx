@@ -142,9 +142,11 @@ void TRosalynRx::Setup()
 
   LL_TIM_CC_EnableChannel( TIM16, LL_TIM_CHANNEL_CH1 );
   LL_TIM_EnableCounter( TIM16 );
+  LL_TIM_OC_SetCompareCH1( TIM16, 2000 );
 
   LL_TIM_CC_EnableChannel( TIM17, LL_TIM_CHANNEL_CH1 );
   LL_TIM_EnableCounter( TIM17 );
+  LL_TIM_OC_SetCompareCH1( TIM17, 2000 );
 }
 
 void TRosalynRx::HmiLoop()
