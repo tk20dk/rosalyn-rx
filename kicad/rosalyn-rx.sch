@@ -1350,4 +1350,20 @@ F 3 "~" H 3600 1500 50  0001 C CNN
 	1    3600 1500
 	1    0    0    -1  
 $EndComp
+Text Notes 4750 5550 0    50   ~ 0
+(TIM2_CH1)
+Text Notes 1450 4350 0    50   ~ 0
+(TIM2_CH2)
+Text Notes 1450 4450 0    50   ~ 0
+(TIM3_CH1)
+Text Notes 1450 4550 0    50   ~ 0
+(TIM3_CH2)
+Text Notes 1400 4850 0    50   ~ 0
+(TIM16_CH1)
+Text Notes 1400 4950 0    50   ~ 0
+(TIM17_CH1)
+Text Notes 1350 4650 0    50   ~ 0
+(TIM16_CH1N)
+Text Notes 1350 4750 0    50   ~ 0
+(TIM17_CH1N)
 $EndSCHEMATC

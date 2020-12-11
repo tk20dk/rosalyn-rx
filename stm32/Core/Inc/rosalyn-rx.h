@@ -17,6 +17,8 @@ class TRosalynRx
 public:
   TRosalynRx();
 
+  void TestPWM();
+
   void Loop();
   void Setup();
   void HmiLoop();

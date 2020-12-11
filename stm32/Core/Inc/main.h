@@ -39,6 +39,7 @@ extern "C" {
 #include "stm32f0xx_ll_pwr.h"
 #include "stm32f0xx_ll_dma.h"
 #include "stm32f0xx_ll_spi.h"
+#include "stm32f0xx_ll_tim.h"
 #include "stm32f0xx_ll_usart.h"
 #include "stm32f0xx_ll_gpio.h"
 
@@ -98,6 +99,18 @@ void Error_Handler(void);
 #define RADIO_DIO1_Pin LL_GPIO_PIN_10
 #define RADIO_DIO1_GPIO_Port GPIOA
 #define RADIO_DIO1_EXTI_IRQn EXTI4_15_IRQn
+#define PWM_CH1_Pin LL_GPIO_PIN_15
+#define PWM_CH1_GPIO_Port GPIOA
+#define PWM_CH2_Pin LL_GPIO_PIN_3
+#define PWM_CH2_GPIO_Port GPIOB
+#define PWM_CH3_Pin LL_GPIO_PIN_4
+#define PWM_CH3_GPIO_Port GPIOB
+#define PWM_CH4_Pin LL_GPIO_PIN_5
+#define PWM_CH4_GPIO_Port GPIOB
+#define PWM_CH7_Pin LL_GPIO_PIN_8
+#define PWM_CH7_GPIO_Port GPIOB
+#define PWM_CH8_Pin LL_GPIO_PIN_9
+#define PWM_CH8_GPIO_Port GPIOB
 #ifndef NVIC_PRIORITYGROUP_0
 #define NVIC_PRIORITYGROUP_0         ((uint32_t)0x00000007) /*!< 0 bit  for pre-emption priority,
                                                                  4 bits for subpriority */
