@@ -17,13 +17,12 @@ class TRosalynRx
 public:
   TRosalynRx();
 
-  void TestPWM();
-
   void Loop();
   void Setup();
   void HmiLoop();
   void HmiError( uint32_t const Interval = 0 );
   void HmiStatus( uint32_t const Interval = 0 );
+  void UpdatePWM( TSbusData const &SbusData );
   void RadioEvent( TRadioEvent const Event );
 
   void SysTick_Handler();

@@ -9,14 +9,27 @@ extern "C" uint32_t HAL_GetTick()
   return TickSys;
 }
 
-void TRosalynRx::TestPWM()
+static uint32_t Map( uint32_t x, uint32_t in_min, uint32_t in_max, uint32_t out_min, uint32_t out_max )
 {
+  if( x < in_min ) x = in_min;
+  if( x > in_max ) x = in_max;
+  return ((( x - in_min ) * ( out_max - out_min )) / ( in_max - in_min )) + out_min;
 }
 
+void TRosalynRx::UpdatePWM( TSbusData const &SbusData )
+{
+  LL_TIM_OC_SetCompareCH1( TIM2, Map( SbusData.Ch1, 0, 2047, 2000, 4000));
+  LL_TIM_OC_SetCompareCH2( TIM2, Map( SbusData.Ch2, 0, 2047, 2000, 4000));
+  LL_TIM_OC_SetCompareCH1( TIM3, Map( SbusData.Ch3, 0, 2047, 2000, 4000));
+  LL_TIM_OC_SetCompareCH2( TIM3, Map( SbusData.Ch4, 0, 2047, 2000, 4000));
+//  LL_TIM_OC_SetCompareCH1( TIM16, Map( SbusData.Ch5, 0, 2047, 2000, 4000));
+//  LL_TIM_OC_SetCompareCH1( TIM17, Map( SbusData.Ch6, 0, 2047, 2000, 4000));
+  LL_TIM_OC_SetCompareCH1( TIM16, Map( SbusData.Ch7, 0, 2047, 2000, 4000));
+  LL_TIM_OC_SetCompareCH1( TIM17, Map( SbusData.Ch8, 0, 2047, 2000, 4000));
+}
 
 void TRosalynRx::Loop()
 {
-  TestPWM();
   HmiLoop();
 
   static uint32_t LastTick;
@@ -42,13 +55,12 @@ void TRosalynRx::Loop()
   {
     SerialFlag = false;
     SbusDataUpstream = SbusSerial.Receive();
-    HmiError( 5 );
   }
 }
 
 void TRosalynRx::RadioEvent( TRadioEvent const Event )
 {
-  uint8_t Buffer[ 256 ];
+  uint8_t Buffer[ 64 ];
 
   if( Event == TRadioEvent::RxDone )
   {
@@ -56,7 +68,6 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
     auto const Rssi = Radio.GetRssi();
     auto const LenRx = Radio.ReadPacket( Buffer, sizeof( Buffer ));
 
-    HmiStatus( 10 );
     UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u Length error\n", Rssi, Snr / 10, abs(Snr) % 10, LenRx );
 
     if( LenRx == 25 )
@@ -64,23 +75,40 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
       int32_t LenOut;
       TSbusFrame SbusFrameRx;
 
-      AesCrypto.DecryptCFB( Buffer, LenRx, SbusFrameRx.Buffer, LenOut );
-      TSbusData SbusData( SbusFrameRx );
+      auto const Status0 = AesCrypto.DecryptCFB( Buffer, LenRx, SbusFrameRx.Buffer, LenOut );
+      if(( Status0 == AES_SUCCESS ) && ( LenOut == 25 ))
+      {
+        TSbusData SbusData( SbusFrameRx );
+        UpdatePWM( SbusData );
 
-      auto const SbusFrameTx = SbusData.Encode();
-      AesCrypto.EncryptCFB( SbusFrameTx.Buffer, LenRx, Buffer, LenOut );
-
-      Radio.Transmit( Buffer, LenRx );
+        auto const SbusFrameTx = SbusData.Encode();
+        auto const Status1 = AesCrypto.EncryptCFB( SbusFrameTx.Buffer, LenRx, Buffer, LenOut );
+        if(( Status1 == AES_SUCCESS ) && ( LenOut == 25 ))
+        {
+          Radio.Transmit( Buffer, LenOut );
+        }
+        else
+        {
+          Radio.Receive();
+          HmiError( 1000 );
+        }
+      }
+      else
+      {
+        Radio.Receive();
+        HmiError( 1000 );
+      }
     }
     else
     {
       Radio.Receive();
+      HmiError( 1000 );
     }
   }
 
   if( Event == TRadioEvent::TxDone )
   {
-    HmiStatus( 10 );
+    HmiStatus( 1 );
     Radio.Receive();
   }
 
@@ -130,22 +158,16 @@ void TRosalynRx::Setup()
   LL_TIM_CC_EnableChannel( TIM2, LL_TIM_CHANNEL_CH1 );
   LL_TIM_CC_EnableChannel( TIM2, LL_TIM_CHANNEL_CH2 );
   LL_TIM_EnableCounter( TIM2 );
-  LL_TIM_OC_SetCompareCH1( TIM2, 2000 );
-  LL_TIM_OC_SetCompareCH2( TIM2, 2000 );
 
   LL_TIM_CC_EnableChannel( TIM3, LL_TIM_CHANNEL_CH1 );
   LL_TIM_CC_EnableChannel( TIM3, LL_TIM_CHANNEL_CH2 );
   LL_TIM_EnableCounter( TIM3 );
-  LL_TIM_OC_SetCompareCH1( TIM3, 2000 );
-  LL_TIM_OC_SetCompareCH2( TIM3, 2000 );
 
   LL_TIM_CC_EnableChannel( TIM16, LL_TIM_CHANNEL_CH1 );
   LL_TIM_EnableCounter( TIM16 );
-  LL_TIM_OC_SetCompareCH1( TIM16, 2000 );
 
   LL_TIM_CC_EnableChannel( TIM17, LL_TIM_CHANNEL_CH1 );
   LL_TIM_EnableCounter( TIM17 );
-  LL_TIM_OC_SetCompareCH1( TIM17, 2000 );
 }
 
 void TRosalynRx::HmiLoop()
