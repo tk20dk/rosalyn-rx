@@ -18,5 +18,9 @@ inline bool ReadPin( GPIO_TypeDef *const Gpio, uint32_t const PinMask )
 {
   return LL_GPIO_IsInputPinSet( Gpio, PinMask ) != 0;
 }
+inline void TogglePin( GPIO_TypeDef *const Gpio, uint32_t const PinMask )
+{
+	LL_GPIO_TogglePin( Gpio, PinMask );
+}
 
 #endif // SYSTEM_H_

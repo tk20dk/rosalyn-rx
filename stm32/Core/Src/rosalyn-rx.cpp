@@ -16,8 +16,28 @@ static uint32_t Map( uint32_t x, uint32_t in_min, uint32_t in_max, uint32_t out_
   return ((( x - in_min ) * ( out_max - out_min )) / ( in_max - in_min )) + out_min;
 }
 
+uint32_t tMax = 0;
+uint32_t tMin = 0xffffffffu;
+uint32_t tCount;
+
 void TRosalynRx::UpdatePWM( TSbusData const &SbusData )
 {
+  if( tCount < 500 )
+  {
+    tCount++;
+  }
+  else
+  {
+    auto const Count = LL_TIM_GetCounter( TIM7 );
+
+    if( Count > tMax )
+      tMax = Count;
+    if( Count < tMin )
+      tMin = Count;
+  }
+
+  LL_TIM_SetCounter( TIM7, 0 );
+
   LL_TIM_OC_SetCompareCH1( TIM2, Map( SbusData.Ch1, 0, 2047, 2000, 4000));
   LL_TIM_OC_SetCompareCH2( TIM2, Map( SbusData.Ch2, 0, 2047, 2000, 4000));
   LL_TIM_OC_SetCompareCH1( TIM3, Map( SbusData.Ch3, 0, 2047, 2000, 4000));
@@ -64,6 +84,7 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
 
   if( Event == TRadioEvent::RxDone )
   {
+ResetPin( HMI_ERROR_GPIO_Port, HMI_ERROR_Pin );
     auto const Snr = Radio.GetSnr();
     auto const Rssi = Radio.GetRssi();
     auto const LenRx = Radio.ReadPacket( Buffer, sizeof( Buffer ));
@@ -108,13 +129,14 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
 
   if( Event == TRadioEvent::TxDone )
   {
-    HmiStatus( 1 );
     Radio.Receive();
+SetPin( HMI_ERROR_GPIO_Port, HMI_ERROR_Pin );
   }
 
   if( Event == TRadioEvent::Timeout )
   {
     HmiError( 1000 );
+    Radio.Receive();
   }
 
   if( Event == TRadioEvent::CrcError )
@@ -123,8 +145,9 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
     auto const Rssi = Radio.GetRssi();
     auto const Length = Radio.ReadPacket( Buffer, sizeof( Buffer ));
 
-    HmiError( 1000 );
     UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u CRC Error\n", Rssi, Snr / 10, abs(Snr) % 10, Length );
+    HmiError( 1000 );
+    Radio.Receive();
   }
 
   if( Event == TRadioEvent::NoCrc )
@@ -133,8 +156,9 @@ void TRosalynRx::RadioEvent( TRadioEvent const Event )
     auto const Rssi = Radio.GetRssi();
     auto const Length = Radio.ReadPacket( Buffer, sizeof( Buffer ));
 
-    HmiError( 1000 );
     UartPrintf( "Rssi:%4d Snr:%3d.%u Len:%u No CRC\n", Rssi, Snr / 10, abs(Snr) % 10, Length );
+    HmiError( 1000 );
+    Radio.Receive();
   }
 }
 
@@ -154,6 +178,9 @@ void TRosalynRx::Setup()
   {
     Radio.Receive();
   }
+
+  LL_TIM_EnableIT_UPDATE( TIM7 );
+  LL_TIM_EnableCounter( TIM7 );
 
   LL_TIM_CC_EnableChannel( TIM2, LL_TIM_CHANNEL_CH1 );
   LL_TIM_CC_EnableChannel( TIM2, LL_TIM_CHANNEL_CH2 );
@@ -189,7 +216,7 @@ void TRosalynRx::HmiError( uint32_t const Interval )
 {
   if( Interval )
   {
-	TimeoutHmiError = HAL_GetTick() + Interval;
+    TimeoutHmiError = HAL_GetTick() + Interval;
   }
   ResetPin( HMI_ERROR_GPIO_Port, HMI_ERROR_Pin );
 }
@@ -206,6 +233,14 @@ void TRosalynRx::HmiStatus( uint32_t const Interval )
 void TRosalynRx::SysTick_Handler()
 {
   TickSys++;
+}
+
+void TRosalynRx::TIM7_IRQHandler()
+{
+  if( LL_TIM_IsActiveFlag_UPDATE( TIM7 ) == 1 )
+  {
+    LL_TIM_ClearFlag_UPDATE( TIM7 );
+  }
 }
 
 void TRosalynRx::EXTI2_3_IRQHandler()
@@ -278,6 +313,11 @@ extern "C" void RosalynRxSetup()
 extern "C" void SysTick_Handler()
 {
   RosalynRx.SysTick_Handler();
+}
+
+extern "C" void TIM7_IRQHandler()
+{
+  RosalynRx.TIM7_IRQHandler();
 }
 
 extern "C" void EXTI2_3_IRQHandler()

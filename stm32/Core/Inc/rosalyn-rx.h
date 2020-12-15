@@ -26,6 +26,7 @@ public:
   void RadioEvent( TRadioEvent const Event );
 
   void SysTick_Handler();
+  void TIM7_IRQHandler();
   void EXTI2_3_IRQHandler();
   void EXTI4_15_IRQHandler();
   void USART2_IRQHandler();
