@@ -52,14 +52,6 @@ void TRosalynRx::Loop()
 {
   HmiLoop();
 
-  static uint32_t LastTick;
-  auto const Tick = HAL_GetTick();
-  if(( Tick > LastTick ) && ( Tick % 14 ) == 0 )
-  {
-    LastTick = Tick;
-    SbusSerial.Transmit( SbusDataDownstream );
-  }
-
   if( IcmFlag )
   {
     IcmFlag = false;
@@ -101,6 +93,7 @@ ResetPin( HMI_ERROR_GPIO_Port, HMI_ERROR_Pin );
       {
         TSbusData SbusData( SbusFrameRx );
         UpdatePWM( SbusData );
+        SbusSerial.Transmit( SbusData );
 
         auto const SbusFrameTx = SbusData.Encode();
         auto const Status1 = AesCrypto.EncryptCFB( SbusFrameTx.Buffer, LenRx, Buffer, LenOut );
@@ -268,6 +261,7 @@ void TRosalynRx::USART2_IRQHandler()
 
 void TRosalynRx::USART3_4_IRQHandler()
 {
+  SbusSerial.USART_IRQHandler();
 }
 
 TRosalynRx::TRosalynRx() :
@@ -296,7 +290,7 @@ TRosalynRx::TRosalynRx() :
   SbusDataUpstream(),
   SbusDataDownstream(),
   AesCrypto( NvData.AesIV, NvData.AesKey ),
-  SbusSerial( USART1, SerialFlag )
+  SbusSerial( USART3, SerialFlag )
 {
 }
 
